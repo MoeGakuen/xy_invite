@@ -16,23 +16,22 @@ function GetData($gs){
 global $m;
 //生成邀请码
 if (isset($_GET['new'])) {
-	$gnum = !empty($_POST['gnum']) ? (int)$_POST['gnum'] : '';
-	$cnum = !empty($_POST['cnum']) ? (int)$_POST['cnum'] : 1;
-	$gs = !empty(option::get('xy_invite_gs')) ? option::get('xy_invite_gs') : '';
+	$gnum = !empty($_POST['gnum']) ? $_POST['gnum'] : '';
+	$cnum = !empty($_POST['cnum']) ? $_POST['cnum'] : 1;
+	$gs = option::get('xy_invite_gs');
 	
 	if(empty($gnum)){$emsg = '生成数量不能为空！';}
 	elseif($gnum <= 0){$emsg = '生成数量不能小于1！';}
 	elseif($gnum > 100){$emsg = '生成数量不能超过100！';}
 	elseif(empty($cnum)){$emsg = '使用次数不能为空！';}
-	elseif($gnum <= 0){$emsg = '使用次数不能小于1！';}
-	elseif($gnum > 99999){$emsg = '使用次数不能大于99999！';}
+	elseif($cnum <= 0){$emsg = '使用次数不能小于1！';}
+	elseif($cnum > 99999){$emsg = '使用次数不能大于99999！';}
 	elseif(empty($gs)){$emsg = '没有设置邀请码格式，请先设置邀请码生成格式！';$page=1;}
 	elseif(strlen(GetData($gs)) > 100){$emsg = '邀请码长度超出限制，请重新设置！请控制在100字符内！';$page=1;}
 	if(!empty($emsg)) {
 		$page = !empty($page) ? $page : 3;
 		ReDirect(SYSTEM_URL.'index.php?mod=admin:setplug&plug=xy_invite&page='.$page.'&error_msg='.$emsg);
 	}
-
 	for($i=0;$i<$gnum;$i++){
 		$yqm = sqladds(GetData($gs));
 		$sql = "INSERT INTO `".DB_NAME."`.`".DB_PREFIX."xy_invite` (`code`, `num`) VALUES ('{$yqm}', '{$cnum}');";
@@ -74,13 +73,12 @@ if (isset($_GET['error_msg'])) {echo '<div class="alert alert-danger alert-dismi
 	<button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>错误：'.strip_tags($_GET['error_msg']).'</div>';
 }
 //提示
-if (isset($_GET['msg']) || isset($_GET['ok'])) {
-	$msg = isset($_GET['ok']) ? '设置已保存！' : strip_tags($_GET['msg']);
+if (isset($_GET['msg'])) {
 	echo '<div class="alert alert-info alert-dismissable">
-	<button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>'.$msg.'</div>';
+	<button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>'.strip_tags($_GET['msg']).'</div>';
 }
 //未开启邀请码提示
-if (empty(option::get('yr_reg'))) {echo '<div class="alert alert-warning alert-dismissable">警告：没有开启邀请码注册！ <a href="index.php?mod=admin:setplug&plug=xy_invite&open">点击开启</a></div>';}
+if (!option::get('yr_reg')) {echo '<div class="alert alert-warning alert-dismissable">警告：没有开启邀请码注册！ <a href="index.php?mod=admin:setplug&plug=xy_invite&open">点击开启</a></div>';}
 ?>
 <!-- NAVI -->
 <ul class="nav nav-tabs" id="PageTab">
@@ -96,8 +94,7 @@ if (empty(option::get('yr_reg'))) {echo '<div class="alert alert-warning alert-d
 	<form action="index.php?mod=admin:setplug&plug=xy_invite&set" method="post">
 		<div class="input-group">
 			<span class="input-group-addon">邀请码格式</span>
-            <?php $yqmgs = !empty(option::get('xy_invite_gs')) ? option::get('xy_invite_gs') : ""?>
-			<input type="text" name="gs" class="form-control" value="<?php echo $yqmgs;?>" placeholder="{年}-{随机[18]}" required />
+			<input type="text" name="gs" class="form-control" value="<?php echo option::get('xy_invite_gs');?>" placeholder="学园-{年}-{随机[18]}" required />
 		</div><br>
 		<div class="input-group">
 			<span class="input-group-addon">邀请码预览</span>
@@ -128,14 +125,15 @@ if (empty(option::get('yr_reg'))) {echo '<div class="alert alert-warning alert-d
 		<tbody>
 			<tr>
 				<th>ID</th>
-				<th>邀请码</th>
+				<th>邀请码<?php $s = $m->query("SELECT * FROM `".DB_NAME."`.`".DB_PREFIX."xy_invite`");
+				if($s->num_rows > 0){echo '&nbsp;&nbsp;<button type="button" class="btn btn-xs btn-info" data-toggle="modal" data-target="#copycode">批量复制</button>';}?></th>
 				<th>剩余次数</th>
 				<th>操作</th>
 			</tr>
 <?php
-	$s = $m->query("SELECT * FROM `".DB_NAME."`.`".DB_PREFIX."xy_invite`");
 	while ($x = $m->fetch_array($s)) {
 		$ydata .= '<tr><td>'.$x['id'].'</td><td>'.$x['code'].'</td><td>'.$x['num'].'</td><td><button type="button" onclick="{if(confirm(\'确定要删除这个邀请码吗？一旦删除无法恢复！\')){window.location = \'./index.php?mod=admin:setplug&plug=xy_invite&id='.$x['id'].'&del\';}return false;};" class="btn btn-sm btn-danger">删除</button></td></tr>';
+		$copyyqm .= $x['code'].PHP_EOL;
 	}
 	echo $ydata;
 ?>
@@ -160,6 +158,26 @@ if (empty(option::get('yr_reg'))) {echo '<div class="alert alert-warning alert-d
 </div>
 <!-- END PAGE3 -->
 
+<!-- modal -->
+<div class="modal fade" id="copycode" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+        <h4 class="modal-title">请手动复制下面的邀请码</h4>
+      </div>
+      <div class="modal-body">
+		<textarea id="invitecode" class="form-control"><?php echo $copyyqm;?></textarea>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" data-dismiss="modal">确定</button>
+      </div>
+    </div>
+  </div>
+</div>
+<script language="javascript">document.getElementById("invitecode").style.height = (document.body.scrollHeight*0.5) + "px";</script>
+<!-- END modal -->
+
 <?php //页码判断
 if(!empty($_GET['page']) || !empty($page)) {
 	$page = !empty($page) ? $page : (int)$_GET['page'];
@@ -169,3 +187,4 @@ if(!empty($_GET['page']) || !empty($page)) {
 		echo '<script language="javascript">document.getElementById("tab_3").click();</script>';
 	}
 }
+?>

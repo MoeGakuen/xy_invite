@@ -8,6 +8,7 @@ function callback_install() {
 	PRIMARY KEY (`id`)
 	) ENGINE=MyISAM DEFAULT CHARSET=utf8;');
 	option::set('xy_invite_gs','学园-{年}-{随机[19]}');
+	$m->query("UPDATE `".DB_NAME."`.`".DB_PREFIX."plugins` SET `order`='50' WHERE `name`='xy_invite';");//兼容某些插件，放后加载。
 }
 
 function callback_remove() {

@@ -1,9 +1,11 @@
 <?php 
 if (!defined('SYSTEM_ROOT')) { die('Insufficient Permissions'); } 
 
-function xy_invite_navi() { ?>
-	<li <?php if(isset($_GET['plugin']) && $_GET['plugin'] == 'xy_invite') { echo 'class="active"'; } ?>><a href="index.php?mod=admin:setplug&plug=xy_invite"><span class="glyphicon glyphicon-tag"></span> 邀请码设置</a></li>
-<?php }
+function xy_invite_navi() { 
+	echo '<li ';
+	if(isset($_GET['plug']) && $_GET['plug'] == 'xy_invite') { echo 'class="active"'; }
+	echo '><a href="index.php?mod=admin:setplug&plug=xy_invite"><span class="glyphicon glyphicon-tag"></span> 邀请码设置</a></li>';
+}
 
 function xy_invite_set() {
 	if(isset($_GET['mod']) && $_GET['mod'] == "admin:set")	echo '<script type="text/javascript">$("#yr_reg").attr("disabled",true);</script>';
@@ -58,10 +60,11 @@ function xy_invite_verify() {
 	doAction('admin_reg_2');
 	$m->query('INSERT INTO `'.DB_NAME.'`.`'.DB_PREFIX.'users` (`id`, `name`, `pw`, `email`, `role`, `t`) VALUES (NULL, \''.$name.'\', \''.EncodePwd($pw).'\', \''.$mail.'\', \''.$role.'\', \''.getfreetable().'\');');
 	doAction('admin_reg_3');
-	ReDirect('index.php?mod=login&msg=' . urlencode('成功注册，请输入账号信息登录本站 [ 账号为用户名或邮箱地址 ]'));
+	ReDirect('index.php?mod=login&msg=' . urlencode('成功注册，请输入账号信息登录本站 [ 账号为用户名或邮箱地址 ]'));die;
 }
 
 addAction('admin_reg_1','xy_invite_verify');
 addAction('footer','xy_invite_set');
 addAction('navi_2','xy_invite_navi');
 addAction('navi_8','xy_invite_navi');
+?>
