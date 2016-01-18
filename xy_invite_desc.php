@@ -2,7 +2,7 @@
 return array(
 	'plugin' => array(
 		'name'        => '自定义多邀请码',
-		'version'     => '1.0',
+		'version'     => '1.1',
 		'description' => '让站点支持多邀请码，邀请码支持自定义参数。',
 		'onsale'      =>  false,
 		'url'         => 'http://tb.hydd.cc',
