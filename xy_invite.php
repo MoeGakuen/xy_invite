@@ -42,7 +42,7 @@ function xy_invite_verify() {
 					if($r_num == 1){
 						$m->query("DELETE FROM `".DB_NAME."`.`".DB_PREFIX."xy_invite` WHERE `id` = ".$r['id']);
 					} else {
-						if($r_num != -1){
+						if($r_num > 1){
 							$m->query("UPDATE `".DB_NAME."`.`".DB_PREFIX."xy_invite` SET `num`=num-1 WHERE `id`='".$r['id']."';");
 						}
 					}
